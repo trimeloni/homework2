@@ -9,25 +9,45 @@ class MoviesController < ApplicationController
   def index
 
     #
-    # Determine what ratings are available
+    # Pull data together from session and parms
     #
-    @all_ratings = Movie.Ratings
+    need_to_redirect = false
+    redirect_hash = Hash.new
+    if params[:ratings] == nil and session[:ratings] != nil
+      need_to_redirect = true
+      redirect_hash[:ratings] = session[:ratings]
+    elsif params[:ratings] != nil
+      redirect_hash[:ratings] = params[:ratings]
+    end
 
+    if params[:sort] == nil and session[:sort] != nil
+      need_to_redirect = true
+      redirect_hash[:sort] = session[:sort]
+    elsif  params[:sort] != nil
+      redirect_hash[:sort] = params[:sort]
+    end
+
+    if need_to_redirect
+      flash.keep
+      redirect_hash.merge!(:action=>'index')
+      redirect_to redirect_hash
+    end
+
+    #
+    # All data should now be in place
+    #
 
     # Get the selected Keys
     if params[:ratings] == nil
-      if flash[:selections]
-        @selected_ratings = flash[:selections]
-      else
-        @selected_ratings = Movie.Ratings
-      end 
+      @selected_ratings = Movie.Ratings
     else
       @selected_ratings = params[:ratings].keys
     end
 
-    #
+    # Determine what ratings are available
+    @all_ratings = Movie.Ratings
+
     # create this rating list automatically
-    #  
     @rating_value = Hash.new
     @all_ratings.each do |rating|
       if @selected_ratings.include? rating
@@ -42,10 +62,10 @@ class MoviesController < ApplicationController
     #
     sort_method=params[:sort]
 
-    if (sort_method != nil)
+    # make sure sorted is always at least empty by the time we get here
+    if (sort_method != nil and sort_method != '' )
       @movies = Movie.order(sort_method).find(:all,:conditions=>{:rating => @selected_ratings })
     else
-#@movies = Movie.all
       @movies = Movie.find(:all,:conditions=>{:rating => @selected_ratings })
     end
 
@@ -58,7 +78,11 @@ class MoviesController < ApplicationController
       @release_hilite = 'hilite'
     end
 
-    flash[:selections] = @selected_ratings
+    #
+    # store data into the session
+    #
+    session[:ratings] = params[:ratings] if params[:ratings] != nil
+    session[:sort] = params[:sort] if params[:sort] != nil
   end
 
   def new
