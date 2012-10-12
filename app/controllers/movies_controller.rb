@@ -43,7 +43,7 @@ class MoviesController < ApplicationController
     sort_method=params[:sort]
 
     if (sort_method != nil)
-      @movies = Movie.order(sort_method).all
+      @movies = Movie.order(sort_method).find(:all,:conditions=>{:rating => @selected_ratings })
     else
 #@movies = Movie.all
       @movies = Movie.find(:all,:conditions=>{:rating => @selected_ratings })
