@@ -7,21 +7,58 @@ class MoviesController < ApplicationController
   end
 
   def index
-    
+
+    #
+    # Determine what ratings are available
+    #
+    @all_ratings = Movie.Ratings
+
+
+    # Get the selected Keys
+    if params[:ratings] == nil
+      if flash[:selections]
+        @selected_ratings = flash[:selections]
+      else
+        @selected_ratings = Movie.Ratings
+      end 
+    else
+      @selected_ratings = params[:ratings].keys
+    end
+
+    #
+    # create this rating list automatically
+    #  
+    @rating_value = Hash.new
+    @all_ratings.each do |rating|
+      if @selected_ratings.include? rating
+        @rating_value.merge!(rating => true)
+      else
+        @rating_value.merge!(rating => false)
+      end
+    end
+
+    #
+    # Sort thr movies for display if required
+    #
     sort_method=params[:sort]
 
     if (sort_method != nil)
       @movies = Movie.order(sort_method).all
     else
-      @movies = Movie.all
+#@movies = Movie.all
+      @movies = Movie.find(:all,:conditions=>{:rating => @selected_ratings })
     end
 
-    # set highlighting
+    #
+    # set highlighting indicating what was sorted by
+    #
     if (sort_method == 'title')
       @title_hilite = 'hilite'
     elsif (sort_method == 'release_date')
       @release_hilite = 'hilite'
     end
+
+    flash[:selections] = @selected_ratings
   end
 
   def new
