@@ -17,6 +17,9 @@ class MoviesController < ApplicationController
       need_to_redirect = true
       redirect_hash[:ratings] = session[:ratings]
     elsif params[:ratings] != nil
+      if params[:ratings].keys.count < 1
+        params[:ratings] = session[:ratings]
+      end
       redirect_hash[:ratings] = params[:ratings]
     end
 
